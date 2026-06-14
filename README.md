@@ -6,38 +6,35 @@ A minimal **Go + Kafka + KEDA** demo showing **event-driven autoscaling** based 
 # 🏗️ Architecture
 
 ```mermaid
-%%{init: {
-  "theme": "base",
-  "themeVariables": {
-    "primaryColor": "#D6EAF8",
-    "primaryBorderColor": "#5DADE2",
-    "primaryTextColor": "#1B4F72",
+---
+config:
+  look: handDrawn
+  layout: dagre
+---
 
-    "secondaryColor": "#D5F5E3",
-    "secondaryBorderColor": "#58D68D",
-    "secondaryTextColor": "#145A32",
+flowchart TB
 
-    "tertiaryColor": "#FCF3CF",
-    "tertiaryBorderColor": "#F4D03F",
-    "tertiaryTextColor": "#7D6608",
+    Client["👤 Client"]
 
-    "lineColor": "#85929E",
-    "fontFamily": "Inter, Arial, sans-serif",
-    "fontSize": "14px"
-  }
-}}%%
+    Sender["🌐 Go Sender<br/><small>HTTP API</small>"]
 
-flowchart LR
+    Topic["📨 Kafka<br/><b>topic: injectMessage</b>"]
 
-    Client["👤 Client"] -->|POST /send| Sender["🌐 Go Sender"]
+    KEDA["⚡ KEDA Scaler"]
 
-    Sender -->|Produce| Topic["📨 Kafka Topic<br/>injectMessage"]
+    Receiver["⚙️ Go Receiver"]
 
-    Topic -->|Consumer Lag| KEDA["⚡ KEDA<br/>Kafka Scaler"]
+    Client -->|"POST /send"| Sender
+    Sender -->|"Produce message"| Topic
+    Topic -->|"Consumer Lag"| KEDA
+    KEDA -->|"Scale 0 → N → 0"| Receiver
+    Receiver -->|"Consume"| Topic
 
-    KEDA -->|Scale 0 → N → 0| Receiver["⚙️ Go Receiver"]
-
-    Receiver -->|Consume| Topic
+    style Client fill:#F9E79F,stroke:#B7950B,stroke-width:2px,color:#5D4037
+    style Sender fill:#AED6F1,stroke:#2E86C1,stroke-width:2px,color:#154360
+    style Topic fill:#FADBD8,stroke:#CD6155,stroke-width:2px,color:#641E16
+    style KEDA fill:#D7BDE2,stroke:#8E44AD,stroke-width:2px,color:#4A235A
+    style Receiver fill:#AED6F1,stroke:#2E86C1,stroke-width:2px,color:#154360
 ```
 
 ## Components
