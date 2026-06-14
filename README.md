@@ -1,77 +1,173 @@
-# KEDA Kafka Go Demo
+# 🚀 KEDA Kafka Go Demo
 
-A minimal Go + Kafka + KEDA demo.
+A minimal **Go + Kafka + KEDA** demo showing **event-driven autoscaling** based on Kafka consumer lag.
 
-- `go-sender`: HTTP API that publishes messages to Kafka.
-- `go-receiver`: Kafka consumer scaled by KEDA from Kafka lag.
-- Kafka topic: `injectMessage`.
-- Consumer group: `go-receiver-group`.
+---
+# 🏗️ Architecture
 
+```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#D6EAF8",
+    "primaryBorderColor": "#5DADE2",
+    "primaryTextColor": "#1B4F72",
 
-## Prerequisites
+    "secondaryColor": "#D5F5E3",
+    "secondaryBorderColor": "#58D68D",
+    "secondaryTextColor": "#145A32",
 
-- Docker Desktop with Kubernetes enabled
-- `kubectl`
-- KEDA installed in the cluster
+    "tertiaryColor": "#FCF3CF",
+    "tertiaryBorderColor": "#F4D03F",
+    "tertiaryTextColor": "#7D6608",
+
+    "lineColor": "#85929E",
+    "fontFamily": "Inter, Arial, sans-serif",
+    "fontSize": "14px"
+  }
+}}%%
+
+flowchart LR
+
+    Client["👤 Client"] -->|POST /send| Sender["🌐 Go Sender"]
+
+    Sender -->|Produce| Topic["📨 Kafka Topic<br/>injectMessage"]
+
+    Topic -->|Consumer Lag| KEDA["⚡ KEDA<br/>Kafka Scaler"]
+
+    KEDA -->|Scale 0 → N → 0| Receiver["⚙️ Go Receiver"]
+
+    Receiver -->|Consume| Topic
+```
+
+## Components
+
+- 🌐 **go-sender**: HTTP API that publishes messages to Kafka.
+- ⚙️ **go-receiver**: Kafka consumer automatically scaled by KEDA.
+- 📨 **Kafka topic**: `injectMessage`
+- 👥 **Consumer group**: `go-receiver-group`
+
+---
+
+# 📋 Prerequisites
+
+- 🐳 Docker Desktop with Kubernetes enabled
+- ☸️ `kubectl`
+- ⚡ KEDA installed in the cluster
 
 Install KEDA if needed:
 
 ```bash
 helm repo add kedacore https://kedacore.github.io/charts
 helm repo update
-helm install keda kedacore/keda --namespace keda --create-namespace
+helm install keda kedacore/keda \
+  --namespace keda \
+  --create-namespace
 ```
 
-## Quick start
+---
+
+# 🚀 Quick Start
+
+Build the applications:
 
 ```bash
 make build
+```
+
+Deploy everything:
+
+```bash
 make deploy
 ```
 
-`make deploy` runs in this order:
+`make deploy` performs the following steps automatically:
 
-1. Deploy Kafka
-2. Wait for the Kafka deployment
-3. Wait for the Kafka broker API
-4. Create the `injectMessage` topic
-5. Deploy sender and receiver
-6. Deploy the KEDA `ScaledObject`
-7. Print status
+1. 🐳 Deploy Kafka
+2. ⏳ Wait for the Kafka deployment
+3. 🔌 Wait for the Kafka broker API
+4. 📨 Create the `injectMessage` topic
+5. 🚀 Deploy sender and receiver
+6. ⚡ Deploy the KEDA `ScaledObject`
+7. 📊 Display deployment status
 
-Open a port-forward:
+Expose the sender API:
 
 ```bash
 make port-forward
 ```
 
-In another terminal, send messages:
+Generate traffic:
 
 ```bash
 make test
 ```
 
-Watch pods with k9s:
+---
+
+# 🎬 Watch KEDA Autoscaling
+
+Open **k9s**:
 
 ```bash
 k9s
 ```
 
-Use `:po` to watch the receiver pod appear, consume messages, then disappear after KEDA cooldown.
+Switch to the Pods view:
 
-## Useful commands
+```text
+:po
+```
+
+You should observe:
+
+```text
+🛌 Receiver scaled to 0
+
+        │
+
+📨 Send HTTP requests
+
+        │
+
+📈 Kafka lag increases
+
+        │
+
+⚡ KEDA creates a Receiver pod
+
+        │
+
+📥 Messages are consumed
+
+        │
+
+✅ Kafka lag becomes 0
+
+        │
+
+🛌 Receiver scales back to 0
+```
+
+---
+
+# 🛠️ Useful Commands
 
 ```bash
 make list-topics
 make logs
+
+kubectl get pods
 kubectl get scaledobject
 kubectl get hpa
 kubectl get deploy go-receiver
 ```
 
-## Manual command sequence
+---
 
-Use this if you do not want to use the Makefile:
+# 💻 Manual Deployment
+
+If you prefer not to use the Makefile:
 
 ```bash
 docker build -t go-sender:1.0.0 -f Dockerfile.sender .
@@ -80,11 +176,15 @@ docker build -t go-receiver:1.0.0 -f Dockerfile.receiver .
 kubectl apply -f k8s/k8s-kafka.yaml
 kubectl rollout status deployment/kafka --timeout=180s
 
-until kubectl exec deploy/kafka -- /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1; do
+until kubectl exec deploy/kafka -- \
+  /opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server localhost:9092 \
+  --list >/dev/null 2>&1; do
   sleep 2
 done
 
-kubectl exec deploy/kafka -- /opt/kafka/bin/kafka-topics.sh \
+kubectl exec deploy/kafka -- \
+  /opt/kafka/bin/kafka-topics.sh \
   --bootstrap-server localhost:9092 \
   --create \
   --if-not-exists \
@@ -99,42 +199,116 @@ kubectl apply -f k8s/k8s-scaledobject.yaml
 kubectl port-forward svc/sender-service 9999:9999
 ```
 
-Then send traffic:
+Generate traffic:
 
 ```bash
 for i in $(seq 1 100); do
-  curl -s -X POST localhost:9999/send -H 'Content-Type: text/plain' -d "msg-$i"
+  curl -X POST localhost:9999/send \
+    -H "Content-Type: text/plain" \
+    -d "msg-$i"
 done
 ```
 
-## Cleanup
+---
+
+# 📈 Demo Flow
+
+```text
+             HTTP POST
+                 │
+                 ▼
+          🌐 go-sender
+                 │
+                 ▼
+        📨 injectMessage
+                 │
+                 ▼
+          Kafka Consumer Lag
+                 │
+                 ▼
+            ⚡ KEDA
+                 │
+          Scale 0 → N → 0
+                 │
+                 ▼
+          ⚙️ go-receiver
+```
+
+---
+
+# 🧹 Cleanup
 
 ```bash
 make undeploy
 ```
 
-## Troubleshooting
+---
 
-### Pods show `ErrImageNeverPull` or `ImagePullBackOff`
+# 🔧 Troubleshooting
 
-This repo uses `imagePullPolicy: IfNotPresent`. On Docker Desktop Kubernetes, local images built with `docker build` should be visible to the cluster. Make sure you ran:
+## ❌ Pods show `ErrImageNeverPull`
+
+This project uses:
+
+```yaml
+imagePullPolicy: IfNotPresent
+```
+
+Always build before deploying:
 
 ```bash
 make build
-```
-
-before:
-
-```bash
 make deploy
 ```
 
-### KEDA `READY=False`
+---
 
-Check operator logs:
+## ⚠️ KEDA shows `READY=False`
+
+Inspect the KEDA operator:
 
 ```bash
 kubectl logs -n keda deploy/keda-operator --tail=100
 ```
 
-The topic is created before the ScaledObject is applied, so missing-topic errors should not happen during normal `make deploy`.
+Verify:
+
+- ✅ Kafka is running
+- ✅ Topic `injectMessage` exists
+- ✅ `bootstrapServers` points to the Kafka Service
+- ✅ `offsetResetPolicy: earliest`
+
+List Kafka topics:
+
+```bash
+make list-topics
+```
+
+---
+
+## 📊 Verify Everything
+
+```bash
+kubectl get pods
+kubectl get scaledobject
+kubectl get hpa
+```
+
+Expected idle state:
+
+```text
+✅ Kafka Running
+✅ Sender Running
+😴 Receiver Scaled to 0
+✅ ScaledObject READY=True
+```
+
+Expected after sending traffic:
+
+```text
+📨 Kafka lag increases
+⚡ KEDA activates
+🚀 Receiver starts
+📥 Messages processed
+😴 Receiver scales back to 0
+```
