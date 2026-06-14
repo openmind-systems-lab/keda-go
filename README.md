@@ -3,6 +3,7 @@
 A minimal **Go + Kafka + KEDA** demo showing **event-driven autoscaling** based on Kafka consumer lag.
 
 ---
+
 # 🏗️ Architecture
 
 ```mermaid
@@ -208,31 +209,6 @@ done
 
 ---
 
-# 📈 Demo Flow
-
-```text
-             HTTP POST
-                 │
-                 ▼
-          🌐 go-sender
-                 │
-                 ▼
-        📨 injectMessage
-                 │
-                 ▼
-          Kafka Consumer Lag
-                 │
-                 ▼
-            ⚡ KEDA
-                 │
-          Scale 0 → N → 0
-                 │
-                 ▼
-          ⚙️ go-receiver
-```
-
----
-
 # 🧹 Cleanup
 
 ```bash
@@ -309,3 +285,21 @@ Expected after sending traffic:
 📥 Messages processed
 😴 Receiver scales back to 0
 ```
+
+---
+
+# 🎥 Demo
+
+The following video demonstrates the complete workflow:
+
+- 🚀 Deploy the application
+- 📨 Produce messages through the HTTP API
+- ⚡ KEDA detects Kafka lag
+- 📈 Receiver scales from **0 → 1**
+- 📥 Messages are consumed
+- 😴 Receiver automatically scales back to **0**
+- 👀 Observe the entire process live using **k9s**
+
+https://github.com/user-attachments/assets/a25d8a70-c946-4d61-85b2-7d131fa2353a
+
+> 💡 The receiver pod is created only when Kafka lag exists and is automatically removed after all messages have been consumed.
