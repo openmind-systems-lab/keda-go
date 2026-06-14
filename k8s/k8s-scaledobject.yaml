@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: go-receiver-scaler
+spec:
+  scaleTargetRef:
+    name: go-receiver
+  pollingInterval: 5
+  cooldownPeriod: 20
+  minReplicaCount: 0
+  maxReplicaCount: 5
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.default.svc.cluster.local:9092
+        consumerGroup: go-receiver-group
+        topic: injectMessage
+        lagThreshold: "1"
+        offsetResetPolicy: latest

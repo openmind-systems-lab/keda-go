@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-receiver
+  labels:
+    app: go-receiver
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: go-receiver
+  template:
+    metadata:
+      labels:
+        app: go-receiver
+    spec:
+      containers:
+        - name: receiver
+          image: go-receiver:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KAFKA_BROKERS
+              value: kafka.default.svc.cluster.local:9092
+            - name: KAFKA_TOPIC
+              value: injectMessage
+            - name: KAFKA_CONSUMER_GROUP
+              value: go-receiver-group
+            - name: PROCESS_DELAY_MS
+              value: "250"
