@@ -7,7 +7,7 @@ A minimal **Go + Kafka + KEDA** demo showing **event-driven autoscaling** based 
 # 🏗️ Architecture
 
 <p align="center">
-  <img src="docs/images/architecture.png" width="900">
+  <img src="media/schema.png" width="900">
 </p>
 
 ## Components
