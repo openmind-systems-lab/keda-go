@@ -6,37 +6,9 @@ A minimal **Go + Kafka + KEDA** demo showing **event-driven autoscaling** based 
 
 # 🏗️ Architecture
 
-```mermaid
----
-config:
-  look: handDrawn
-  layout: dagre
----
-
-flowchart TB
-
-    Client["👤 Client"]
-
-    Sender["🌐 Go Sender<br/><small>HTTP API</small>"]
-
-    Topic["📨 Kafka<br/><b>topic: injectMessage</b>"]
-
-    KEDA["⚡ KEDA Scaler"]
-
-    Receiver["⚙️ Go Receiver"]
-
-    Client -->|"POST /send"| Sender
-    Sender -->|"Produce message"| Topic
-    Topic -->|"Consumer Lag"| KEDA
-    KEDA -->|"Scale 0 → N → 0"| Receiver
-    Receiver -->|"Consume"| Topic
-
-    style Client fill:#F9E79F,stroke:#B7950B,stroke-width:2px,color:#5D4037
-    style Sender fill:#AED6F1,stroke:#2E86C1,stroke-width:2px,color:#154360
-    style Topic fill:#FADBD8,stroke:#CD6155,stroke-width:2px,color:#641E16
-    style KEDA fill:#D7BDE2,stroke:#8E44AD,stroke-width:2px,color:#4A235A
-    style Receiver fill:#AED6F1,stroke:#2E86C1,stroke-width:2px,color:#154360
-```
+<p align="center">
+  <img src="docs/images/architecture.png" width="900">
+</p>
 
 ## Components
 
